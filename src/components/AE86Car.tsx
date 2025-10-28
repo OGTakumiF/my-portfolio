@@ -11,7 +11,7 @@ interface AE86CarProps {
 // Wrap the component with forwardRef
 export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
   ({ position, rotation, onUpdate }, ref) => {
-    // Use the 'ref' passed from the parent, or create an internal one if no ref is passed
+    // This line is the key: it uses the 'ref' from the parent component.
     const carRef = (ref as React.MutableRefObject<THREE.Group>) || useRef<THREE.Group>(null!);
     const velocity = useRef(new THREE.Vector3());
     const angularVelocity = useRef(0);
@@ -80,6 +80,7 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
       carRef.current.position.x = Math.max(-bounds, Math.min(bounds, carRef.current.position.x));
       carRef.current.position.z = Math.max(-bounds, Math.min(bounds, carRef.current.position.z));
 
+      // This call is still used by Playground3D for info-point collision
       onUpdate(carRef.current.position.clone(), carRef.current.rotation.clone());
     });
 
