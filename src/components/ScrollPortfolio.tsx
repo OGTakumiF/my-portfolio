@@ -1,8 +1,8 @@
 import { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { ScrollControls, useScroll, Html } from '@react-three/drei';
-import { AE86Car } from './AE86Car'; // <-- THIS IS THE FIXED IMPORT
-import { Lighting } from './Room3D'; // Re-use the lighting
+import { ScrollControls, useScroll, Html, PerspectiveCamera } from '@react-three/drei'; // <-- Added PerspectiveCamera import
+import { AE86Car } from './AE86Car';
+import { Lighting } from './Room3D';
 import * as THREE from 'three';
 
 interface ScrollPortfolioProps {
@@ -11,55 +11,55 @@ interface ScrollPortfolioProps {
 
 /**
  * 3D Scene Component
- * This is what will be in the background
  */
 function Scene() {
-  const scroll = useScroll(); // This hook gives us scroll progress
+  const scroll = useScroll();
   const carRef = useRef<THREE.Group>(null!);
 
   useFrame((state) => {
-    // scroll.offset is the scroll progress from 0 (top) to 1 (bottom)
     const offset = scroll.offset;
 
-    // Move the camera back as we scroll
+    // We modify the default camera directly via state.camera
     state.camera.position.z = 10 - offset * 40;
+    state.camera.rotation.x = -0.2 - offset * 0.3;
+    state.camera.rotation.y = offset * 0.1;
+    // Ensure the camera looks generally forward, slightly down
+    state.camera.lookAt(0, -2 - offset * 5, -10 - offset * 20);
 
-    // Move the car up and down
+
     if (carRef.current) {
       carRef.current.position.y = -1 - offset * 5;
       carRef.current.rotation.x = offset * 0.5;
       carRef.current.rotation.y = offset * Math.PI;
     }
-    
-    // Animate the camera's rotation
-    state.camera.rotation.x = -0.2 - offset * 0.3;
-    state.camera.rotation.y = offset * 0.1;
   });
 
   return (
     <>
       <Lighting />
-      <AE86Car 
+      {/* Ensure the onUpdate prop exists, even if empty */}
+      <AE86Car
         ref={carRef}
-        position={new THREE.Vector3(0, -1, 0)} 
-        rotation={new THREE.Euler(0, 0, 0)} 
-        onUpdate={() => {}} 
+        position={new THREE.Vector3(0, -1, 0)}
+        rotation={new THREE.Euler(0, 0, 0)}
+        onUpdate={() => {}}
       />
+      {/* Add a default camera */}
+      <PerspectiveCamera makeDefault fov={60} position={[0, 0, 10]} />
     </>
   );
 }
 
 /**
  * HTML Content Component
- * This is the text overlay
  */
 function HtmlContent({ onBack }: { onBack: () => void }) {
   return (
-    <div className="absolute top-0 left-0 w-full text-white">
-      {/* Back Button */}
+    <div className="absolute top-0 left-0 w-full text-white pointer-events-none"> {/* Added pointer-events-none */}
+      {/* Back Button - Allow pointer events */}
       <button
         onClick={onBack}
-        className="fixed top-4 left-4 z-50 text-white hover:text-cyan-400 transition-colors font-semibold bg-slate-900/50 backdrop-blur-sm p-3 rounded-lg"
+        className="fixed top-4 left-4 z-50 text-white hover:text-cyan-400 transition-colors font-semibold bg-slate-900/50 backdrop-blur-sm p-3 rounded-lg pointer-events-auto" // Added pointer-events-auto
       >
         ← Back to Choice
       </button>
@@ -113,25 +113,20 @@ function HtmlContent({ onBack }: { onBack: () => void }) {
 
 /**
  * Main Component
- * This combines the 3D and HTML
  */
 export default function ScrollPortfolio({ onBack }: ScrollPortfolioProps) {
   return (
-    // This div ensures the component is fixed and covers the screen
     <div className="fixed top-0 left-0 w-full h-full bg-slate-900">
-      {/* pages={4} means the scrollable area is 4 screens tall.
-        damping={0.1} adds a smooth "lag" to the scroll
-      */}
       <ScrollControls pages={4} damping={0.1}>
-        {/* Canvas for 3D content */}
-        <Canvas shadows camera={{ position: [0, 0, 10], fov: 60 }}>
+        {/* Removed camera prop from Canvas */}
+        <Canvas shadows>
           <Suspense fallback={null}>
             <Scene />
           </Suspense>
         </Canvas>
 
-        {/* The <Html> component lets us layer HTML on top */}
-        <Html fullscreen>
+        {/* Ensure Html component uses fullscreen */}
+        <Html fullscreen style={{ pointerEvents: 'none' }}> {/* Added pointer-events: none style */}
           <HtmlContent onBack={onBack} />
         </Html>
       </ScrollControls>
