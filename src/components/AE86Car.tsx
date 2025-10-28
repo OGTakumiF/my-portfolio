@@ -11,8 +11,7 @@ interface AE86CarProps {
 // Wrap the component with forwardRef
 export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
   ({ position, rotation, onUpdate }, ref) => {
-    // The 'ref' is now the one passed from Playground3D
-    // We use an internal ref as a fallback if no ref is passed
+    // Use the 'ref' passed from the parent, or create an internal one if no ref is passed
     const carRef = (ref as React.MutableRefObject<THREE.Group>) || useRef<THREE.Group>(null!);
     const velocity = useRef(new THREE.Vector3());
     const angularVelocity = useRef(0);
@@ -81,7 +80,6 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
       carRef.current.position.x = Math.max(-bounds, Math.min(bounds, carRef.current.position.x));
       carRef.current.position.z = Math.max(-bounds, Math.min(bounds, carRef.current.position.z));
 
-      // This onUpdate call is still needed for collision detection
       onUpdate(carRef.current.position.clone(), carRef.current.rotation.clone());
     });
 
@@ -94,7 +92,6 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
             <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.7} />
           </mesh>
 
-          {/* ... rest of the car model ... */}
           <mesh position={[0, 0.5, -0.3]} castShadow>
             <boxGeometry args={[1.4, 0.6, 1.8]} />
             <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.7} />
@@ -158,9 +155,8 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
 function Wheel({ position }: { position: [number, number, number] }) {
   const wheelRef = useRef<THREE.Group>(null);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (wheelRef.current) {
-      // You might want to tie this rotation to the car's velocity
       wheelRef.current.rotation.x += 0.1;
     }
   });
