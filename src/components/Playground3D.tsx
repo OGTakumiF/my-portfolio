@@ -1,5 +1,5 @@
-import { useState, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useState, Suspense, useRef } from 'react'; // <-- Import useRef
+import { Canvas, useFrame } from '@react-three/fiber'; // <-- Import useFrame
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Info, Trophy, Music, Zap, Target, Heart, X, Car as CarIcon } from 'lucide-react';
 import * as THREE from 'three';
@@ -24,11 +24,18 @@ export default function Playground3D({ onBack }: Playground3DProps) {
   const [selectedInfo, setSelectedInfo] = useState<InfoData | null>(null);
   const [discoveredPoints, setDiscoveredPoints] = useState<Set<string>>(new Set());
   const [showControls, setShowControls] = useState(true);
-  const [carPosition, setCarPosition] = useState(new THREE.Vector3(0, 0, 0));
-  const [carRotation, setCarRotation] = useState(new THREE.Euler(0, 0, 0));
+  
+  // --- REMOVED STATE ---
+  // const [carPosition, setCarPosition] = useState(new THREE.Vector3(0, 0, 0));
+  // const [carRotation, setCarRotation] = useState(new THREE.Euler(0, 0, 0));
+  
+  // --- ADDED REF ---
+  const carRef = useRef<THREE.Group>(null!);
+
   const [cameraMode, setCameraMode] = useState<'third-person' | 'free'>('third-person');
 
   const infoPoints: InfoData[] = [
+    // ... (infoPoints array remains the same)
     {
       id: '1',
       position: [-15, 1, -15],
@@ -102,9 +109,11 @@ export default function Playground3D({ onBack }: Playground3DProps) {
   };
 
   const handleCarUpdate = (pos: THREE.Vector3, rot: THREE.Euler) => {
-    setCarPosition(pos);
-    setCarRotation(rot);
+    // --- REMOVED STATE UPDATES ---
+    // setCarPosition(pos);
+    // setCarRotation(rot);
 
+    // Keep the collision detection logic
     infoPoints.forEach(point => {
       const distance = pos.distanceTo(new THREE.Vector3(...point.position));
       if (distance < 5 && !discoveredPoints.has(point.id)) {
@@ -116,6 +125,7 @@ export default function Playground3D({ onBack }: Playground3DProps) {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
+      {/* ... (UI elements remain the same) ... */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
@@ -183,13 +193,15 @@ export default function Playground3D({ onBack }: Playground3DProps) {
             ))}
 
             <AE86Car
+              ref={carRef} // <-- Pass the ref here
               position={new THREE.Vector3(0, 0, 0)}
               rotation={new THREE.Euler(0, 0, 0)}
               onUpdate={handleCarUpdate}
             />
 
             {cameraMode === 'third-person' ? (
-              <ThirdPersonCamera carPosition={carPosition} carRotation={carRotation} />
+              // --- Pass the carRef to the camera ---
+              <ThirdPersonCamera carRef={carRef} />
             ) : (
               <OrbitControls
                 enablePan={true}
@@ -204,6 +216,7 @@ export default function Playground3D({ onBack }: Playground3DProps) {
         </Canvas>
       </div>
 
+      {/* ... (Modal UI remains the same) ... */}
       {selectedInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedInfo(null)}>
           <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl w-full border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -240,24 +253,40 @@ export default function Playground3D({ onBack }: Playground3DProps) {
   );
 }
 
-function ThirdPersonCamera({ carPosition, carRotation }: { carPosition: THREE.Vector3; carRotation: THREE.Euler }) {
-  const cameraRef = useState<THREE.PerspectiveCamera | null>(null)[0];
+// --- UPDATED ThirdPersonCamera Component ---
+function ThirdPersonCamera({ carRef }: { carRef: React.RefObject<THREE.Group> }) {
+  const cameraRef = useRef<THREE.PerspectiveCamera>(null!);
+
+  useFrame(() => {
+    if (carRef.current && cameraRef.current) {
+      const car = carRef.current;
+      const camera = cameraRef.current;
+      
+      // Target position (10 units behind, 5 units up)
+      const camPos = new THREE.Vector3(
+        car.position.x - Math.sin(car.rotation.y) * 10,
+        car.position.y + 5,
+        car.position.z - Math.cos(car.rotation.y) * 10
+      );
+      
+      // Target rotation
+      const targetEuler = new THREE.Euler(-0.3, car.rotation.y, 0);
+      const targetQuaternion = new THREE.Quaternion().setFromEuler(targetEuler);
+
+      // Smoothly interpolate position (lerp)
+      camera.position.lerp(camPos, 0.1);
+      
+      // Smoothly interpolate rotation (slerp)
+      camera.quaternion.slerp(targetQuaternion, 0.1);
+    }
+  });
 
   return (
     <PerspectiveCamera
       ref={cameraRef}
       makeDefault
-      position={[
-        carPosition.x - Math.sin(carRotation.y) * 10,
-        carPosition.y + 5,
-        carPosition.z - Math.cos(carRotation.y) * 10
-      ]}
-      rotation={[
-        -0.3,
-        carRotation.y,
-        0
-      ]}
       fov={75}
+      position={[0, 5, 10]} // Initial position
     />
   );
 }
