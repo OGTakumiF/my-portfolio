@@ -20,25 +20,21 @@ interface InfoData {
   category: string;
 }
 
-// This component controls the camera in 3rd person mode
+// This component smoothly controls the camera
 function CameraRig({ carRef }: { carRef: React.RefObject<THREE.Group> }) {
   useFrame((state) => {
     if (!carRef.current) {
       return;
     }
-
     const car = carRef.current;
-
     const camPos = new THREE.Vector3(
       car.position.x - Math.sin(car.rotation.y) * 10,
       car.position.y + 5,
       car.position.z - Math.cos(car.rotation.y) * 10
     );
-
     state.camera.position.lerp(camPos, 0.1);
     state.camera.lookAt(car.position);
   });
-
   return null;
 }
 
@@ -51,6 +47,7 @@ export default function Playground3D({ onBack }: Playground3DProps) {
   // This ref is for the car itself
   const carRef = useRef<THREE.Group>(null);
   
+  // We no longer use useState for carPosition or carRotation
   const [cameraMode, setCameraMode] = useState<'third-person' | 'free'>('third-person');
 
   const infoPoints: InfoData[] = [
@@ -126,6 +123,7 @@ export default function Playground3D({ onBack }: Playground3DProps) {
     }
   };
 
+  // This function is still used for collision detection
   const handleCarUpdate = (pos: THREE.Vector3) => {
     infoPoints.forEach(point => {
       const distance = pos.distanceTo(new THREE.Vector3(...point.position));
@@ -210,9 +208,9 @@ export default function Playground3D({ onBack }: Playground3DProps) {
               rotation={new THREE.Euler(0, 0, 0)}
               onUpdate={handleCarUpdate}
             />
-
-            <PerspectiveCamera makeDefault fov={75} position={[0, 5, 10]} />
             
+            {/* This is the new camera setup */}
+            <PerspectiveCamera makeDefault fov={75} position={[0, 5, 10]} />
             {cameraMode === 'third-person' ? (
               <CameraRig carRef={carRef} />
             ) : (
