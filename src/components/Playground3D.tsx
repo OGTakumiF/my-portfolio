@@ -1,5 +1,5 @@
 import { useState, Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber'; // Make sure useFrame is imported
+import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Info, Trophy, Music, Zap, Target, Heart, X, Car as CarIcon } from 'lucide-react';
 import * as THREE from 'three';
@@ -20,13 +20,37 @@ interface InfoData {
   category: string;
 }
 
+// This component controls the camera in 3rd person mode
+function CameraRig({ carRef }: { carRef: React.RefObject<THREE.Group> }) {
+  useFrame((state) => {
+    if (!carRef.current) {
+      return;
+    }
+
+    const car = carRef.current;
+
+    const camPos = new THREE.Vector3(
+      car.position.x - Math.sin(car.rotation.y) * 10,
+      car.position.y + 5,
+      car.position.z - Math.cos(car.rotation.y) * 10
+    );
+
+    state.camera.position.lerp(camPos, 0.1);
+    state.camera.lookAt(car.position);
+  });
+
+  return null;
+}
+
+
 export default function Playground3D({ onBack }: Playground3DProps) {
   const [selectedInfo, setSelectedInfo] = useState<InfoData | null>(null);
   const [discoveredPoints, setDiscoveredPoints] = useState<Set<string>>(new Set());
   const [showControls, setShowControls] = useState(true);
   
-  // This ref is for the car itself. Initialize with null.
+  // This ref is for the car itself
   const carRef = useRef<THREE.Group>(null);
+  
   const [cameraMode, setCameraMode] = useState<'third-person' | 'free'>('third-person');
 
   const infoPoints: InfoData[] = [
@@ -102,8 +126,7 @@ export default function Playground3D({ onBack }: Playground3DProps) {
     }
   };
 
-  // This function no longer sets state, so it's much faster.
-  const handleCarUpdate = (pos: THREE.Vector3, rot: THREE.Euler) => {
+  const handleCarUpdate = (pos: THREE.Vector3) => {
     infoPoints.forEach(point => {
       const distance = pos.distanceTo(new THREE.Vector3(...point.position));
       if (distance < 5 && !discoveredPoints.has(point.id)) {
@@ -115,7 +138,6 @@ export default function Playground3D({ onBack }: Playground3DProps) {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden">
-      {/* ... (Your UI layout here, it's correct) ... */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
@@ -183,19 +205,14 @@ export default function Playground3D({ onBack }: Playground3DProps) {
             ))}
 
             <AE86Car
-              ref={carRef} // Pass the ref to the car
+              ref={carRef}
               position={new THREE.Vector3(0, 0, 0)}
               rotation={new THREE.Euler(0, 0, 0)}
               onUpdate={handleCarUpdate}
             />
-            
-            {/* NEW CAMERA SETUP:
-              1. We add a default PerspectiveCamera.
-              2. We add our new <CameraRig> component *only* in third-person mode.
-              3. We keep <OrbitControls> for free-cam mode.
-            */}
-            <PerspectiveCamera makeDefault fov={75} position={[0, 5, 10]} />
 
+            <PerspectiveCamera makeDefault fov={75} position={[0, 5, 10]} />
+            
             {cameraMode === 'third-person' ? (
               <CameraRig carRef={carRef} />
             ) : (
@@ -212,7 +229,6 @@ export default function Playground3D({ onBack }: Playground3DProps) {
         </Canvas>
       </div>
 
-      {/* ... (Your modal UI here, it's correct) ... */}
       {selectedInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedInfo(null)}>
           <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl w-full border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
@@ -248,35 +264,3 @@ export default function Playground3D({ onBack }: Playground3DProps) {
     </div>
   );
 }
-
-// NEW CameraRig component.
-// This component doesn't render anything (returns null).
-// It just uses useFrame to "rig" the default scene camera to follow the car.
-function CameraRig({ carRef }: { carRef: React.RefObject<THREE.Group> }) {
-  // 'state.camera' gives us the default camera in the scene.
-  useFrame((state) => {
-    if (!carRef.current) {
-      // If the car ref isn't ready yet, do nothing.
-      return;
-    }
-
-    const car = carRef.current;
-
-    // Calculate the ideal camera position
-    const camPos = new THREE.Vector3(
-      car.position.x - Math.sin(car.rotation.y) * 10,
-      car.position.y + 5,
-      car.position.z - Math.cos(car.rotation.y) * 10
-    );
-
-    // Smoothly move the camera towards the ideal position
-    state.camera.position.lerp(camPos, 0.1);
-
-    // Make the camera look at the car's position
-    state.camera.lookAt(car.position);
-  });
-
-  return null;
-}
-
-// DELETE the old `function ThirdPersonCamera(...)` component entirely.
