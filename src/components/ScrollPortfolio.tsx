@@ -1,9 +1,7 @@
-// src/components/ScrollPortfolio.tsx
-
 import { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ScrollControls, useScroll, Html } from '@react-three/drei';
-import { AE86Car } from './AE86Car'; // We'll re-use your car
+import { AE86Car } from './AE86Car'; // <-- THIS IS THE FIXED IMPORT
 import { Lighting } from './Room3D'; // Re-use the lighting
 import * as THREE from 'three';
 
