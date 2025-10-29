@@ -5,14 +5,27 @@ import * as THREE from 'three';
 
 export function Floor() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-      <planeGeometry args={[50, 50]} />
-      <meshStandardMaterial
-        color="#2a2a2a"
-        roughness={0.8}
-        metalness={0.2}
-      />
-    </mesh>
+    <>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[50, 50]} />
+        <meshStandardMaterial
+          color="#1a1a2e"
+          roughness={0.7}
+          metalness={0.3}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+        <planeGeometry args={[50, 50, 20, 20]} />
+        <meshStandardMaterial
+          color="#0f3460"
+          roughness={0.9}
+          metalness={0.1}
+          wireframe
+          transparent
+          opacity={0.1}
+        />
+      </mesh>
+    </>
   );
 }
 
@@ -56,38 +69,56 @@ interface InfoStandProps {
 
 export function InfoStand({ position, title, color, onClick }: InfoStandProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime) * 0.3;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.15;
+    }
+    if (glowRef.current) {
+      glowRef.current.rotation.y = -state.clock.elapsedTime * 0.3;
+      glowRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.15;
     }
   });
 
   return (
     <group position={position}>
       <mesh ref={meshRef} onClick={onClick} castShadow>
-        <boxGeometry args={[1.5, 2, 1.5]} />
+        <boxGeometry args={[1.5, 2.5, 1.5]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.3}
-          roughness={0.4}
-          metalness={0.6}
+          emissiveIntensity={0.5}
+          roughness={0.3}
+          metalness={0.7}
+        />
+      </mesh>
+
+      <mesh ref={glowRef} onClick={onClick}>
+        <boxGeometry args={[1.8, 2.8, 1.8]} />
+        <meshStandardMaterial
+          color={color}
+          transparent
+          opacity={0.2}
+          emissive={color}
+          emissiveIntensity={0.8}
         />
       </mesh>
 
       <Text
-        position={[0, 2.5, 0]}
-        fontSize={0.4}
+        position={[0, 3, 0]}
+        fontSize={0.45}
         color="white"
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
       >
         {title}
       </Text>
 
-      <pointLight position={[0, 1, 0]} color={color} intensity={2} distance={5} />
+      <pointLight position={[0, 1, 0]} color={color} intensity={3} distance={8} />
     </group>
   );
 }
@@ -134,10 +165,10 @@ export function Decorations() {
 export function Lighting() {
   return (
     <>
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.4} />
       <directionalLight
         position={[10, 20, 10]}
-        intensity={0.8}
+        intensity={1}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -147,12 +178,12 @@ export function Lighting() {
         shadow-camera-top={30}
         shadow-camera-bottom={-30}
       />
-      <pointLight position={[0, 8, 0]} intensity={0.5} color="#60a5fa" />
+      <pointLight position={[0, 8, 0]} intensity={1} color="#60a5fa" />
       <spotLight
         position={[-15, 8, -15]}
         angle={0.3}
         penumbra={0.5}
-        intensity={1}
+        intensity={1.5}
         castShadow
         color="#10b981"
       />
@@ -160,10 +191,11 @@ export function Lighting() {
         position={[15, 8, 15]}
         angle={0.3}
         penumbra={0.5}
-        intensity={1}
+        intensity={1.5}
         castShadow
         color="#f59e0b"
       />
+      <hemisphereLight args={['#0a4d68', '#1a1a2e', 0.3]} />
     </>
   );
 }

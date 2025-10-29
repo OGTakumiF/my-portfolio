@@ -135,29 +135,30 @@ export default function Playground3D({ onBack }: Playground3DProps) {
   };
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
-      <div className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={onBack}
-            className="text-white hover:text-cyan-400 transition-colors font-semibold"
+            className="text-white hover:text-cyan-400 transition-all duration-300 font-semibold flex items-center space-x-2 bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700 hover:border-cyan-500"
           >
-            ← Back to Choice
+            <span>←</span>
+            <span>Back to Choice</span>
           </button>
           <div className="flex items-center space-x-6">
             <button
               onClick={() => setCameraMode(prev => prev === 'third-person' ? 'free' : 'third-person')}
-              className="text-white hover:text-cyan-400 transition-colors text-sm"
+              className="text-white hover:text-emerald-400 transition-all duration-300 text-sm bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700 hover:border-emerald-500"
             >
-              {cameraMode === 'third-person' ? '3rd Person' : 'Free Cam'}
+              {cameraMode === 'third-person' ? '🎮 3rd Person' : '🎥 Free Cam'}
             </button>
-            <div className="text-white text-sm">
+            <div className="text-white text-sm bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700">
               <span className="text-cyan-400 font-semibold">{discoveredPoints.size}</span>
               <span className="text-slate-400"> / {infoPoints.length} Discovered</span>
             </div>
             <button
               onClick={() => setShowControls(!showControls)}
-              className="text-white hover:text-cyan-400 transition-colors"
+              className="text-white hover:text-orange-400 transition-all duration-300 bg-slate-800/50 p-2 rounded-lg border border-slate-700 hover:border-orange-500"
             >
               <Info className="w-5 h-5" />
             </button>
@@ -166,20 +167,23 @@ export default function Playground3D({ onBack }: Playground3DProps) {
       </div>
 
       {showControls && (
-        <div className="fixed top-20 left-4 z-30 bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-lg p-4 text-white max-w-xs">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold">Controls</h3>
-            <button onClick={() => setShowControls(false)} className="text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
+        <div className="fixed top-24 left-4 z-30 bg-slate-800/95 backdrop-blur-md border border-slate-700 rounded-xl p-5 text-white max-w-xs shadow-2xl">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-lg flex items-center space-x-2">
+              <span>🎮</span>
+              <span>Controls</span>
+            </h3>
+            <button onClick={() => setShowControls(false)} className="text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="space-y-2 text-sm text-slate-300">
-            <p><strong>W / ↑</strong> - Accelerate</p>
-            <p><strong>S / ↓</strong> - Brake / Reverse</p>
-            <p><strong>A / ←</strong> - Turn Left</p>
-            <p><strong>D / →</strong> - Turn Right</p>
-            <p><strong>Click Camera Button</strong> - Switch View</p>
-            <p className="text-cyan-400 text-xs mt-3">Drive your AE86 near markers to discover information!</p>
+          <div className="space-y-2.5 text-sm text-slate-300">
+            <p className="flex items-center space-x-2"><strong className="text-cyan-400 w-20">W / ↑</strong> <span>Accelerate</span></p>
+            <p className="flex items-center space-x-2"><strong className="text-cyan-400 w-20">S / ↓</strong> <span>Brake / Reverse</span></p>
+            <p className="flex items-center space-x-2"><strong className="text-cyan-400 w-20">A / ←</strong> <span>Turn Left</span></p>
+            <p className="flex items-center space-x-2"><strong className="text-cyan-400 w-20">D / →</strong> <span>Turn Right</span></p>
+            <div className="border-t border-slate-700 my-3"></div>
+            <p className="text-emerald-400 text-xs leading-relaxed bg-emerald-500/10 p-2 rounded">Drive your AE86 near the glowing markers to discover information!</p>
           </div>
         </div>
       )}
@@ -228,32 +232,32 @@ export default function Playground3D({ onBack }: Playground3DProps) {
       </div>
 
       {selectedInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedInfo(null)}>
-          <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl w-full border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onClick={() => setSelectedInfo(null)}>
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-2xl w-full border border-slate-600 shadow-2xl transform transition-all" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: selectedInfo.color }}>
-                  <selectedInfo.icon className="w-8 h-8 text-white" />
+                <div className="w-20 h-20 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: selectedInfo.color }}>
+                  <selectedInfo.icon className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-white">{selectedInfo.title}</h2>
-                  <span className="text-sm text-cyan-400">{selectedInfo.category}</span>
+                  <h2 className="text-4xl font-bold text-white mb-1">{selectedInfo.title}</h2>
+                  <span className="text-sm text-cyan-400 font-semibold px-3 py-1 bg-cyan-500/20 rounded-full">{selectedInfo.category}</span>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedInfo(null)}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-slate-400 hover:text-white transition-colors bg-slate-700/50 p-2 rounded-lg hover:bg-slate-700"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="text-slate-300 text-lg leading-relaxed">
+            <p className="text-slate-200 text-lg leading-relaxed mb-6">
               {selectedInfo.content}
             </p>
             {discoveredPoints.has(selectedInfo.id) && (
-              <div className="mt-6 flex items-center text-emerald-400 text-sm">
-                <Trophy className="w-4 h-4 mr-2" />
-                <span>Discovered!</span>
+              <div className="mt-6 flex items-center text-emerald-400 text-sm bg-emerald-500/20 px-4 py-2 rounded-lg">
+                <Trophy className="w-5 h-5 mr-2" />
+                <span className="font-semibold">Discovered!</span>
               </div>
             )}
           </div>

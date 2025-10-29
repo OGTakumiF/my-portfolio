@@ -108,16 +108,16 @@ export default function LandingChoice({ onChoose }: LandingChoiceProps) {
             onClick={() => onChoose('scroll')}
             onMouseEnter={() => setHoveredCard('scroll')}
             onMouseLeave={() => setHoveredCard(null)}
-            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 border border-slate-700 hover:border-purple-500"
+            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/20 border border-slate-700 hover:border-orange-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
             <div className="relative z-10">
-              <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors duration-300">
-                <Layers className={`w-10 h-10 text-purple-400 transition-transform duration-500 ${hoveredCard === 'scroll' ? 'rotate-12 scale-110' : ''}`} />
+              <div className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-500/20 transition-colors duration-300">
+                <Layers className={`w-10 h-10 text-orange-400 transition-transform duration-500 ${hoveredCard === 'scroll' ? 'rotate-12 scale-110' : ''}`} />
               </div>
 
-              <h2 className="text-3xl font-bold text-white mb-4 group-hover:text-purple-300 transition-colors">
+              <h2 className="text-3xl font-bold text-white mb-4 group-hover:text-orange-300 transition-colors">
                 Scroll Experience
               </h2>
 
@@ -126,7 +126,7 @@ export default function LandingChoice({ onChoose }: LandingChoiceProps) {
                 a 3D background with a guided HTML-based story.
               </p>
 
-              <div className="flex items-center text-purple-400 font-semibold">
+              <div className="flex items-center text-orange-400 font-semibold">
                 <span className="mr-2">Start scrolling</span>
                 <span className="transform transition-transform duration-300 group-hover:translate-x-2">→</span>
               </div>
