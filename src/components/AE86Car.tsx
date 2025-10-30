@@ -47,11 +47,11 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
       let accelerating = false;
 
       if (currentKeys.has('w') || currentKeys.has('arrowup')) {
-        velocity.current.z -= speed * delta * 60;
+        velocity.current.z += speed * delta * 60;
         accelerating = true;
       }
       if (currentKeys.has('s') || currentKeys.has('arrowdown')) {
-        velocity.current.z += speed * 0.6 * delta * 60;
+        velocity.current.z -= speed * 0.6 * delta * 60;
         accelerating = true;
       }
 
