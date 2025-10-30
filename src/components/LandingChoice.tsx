@@ -1,16 +1,14 @@
 // src/components/LandingChoice.tsx
 
-import { Car, BookOpen, Sparkles, Layers } from 'lucide-react'; // <-- 1. Import a new icon
+import { Car, BookOpen, Sparkles, Layers, Home } from 'lucide-react';
 import { useState } from 'react';
 
 interface LandingChoiceProps {
-  // 2. Add 'scroll' to the onChoose type
-  onChoose: (mode: 'standard' | '3d' | 'scroll') => void;
+  onChoose: (mode: 'standard' | '3d' | 'scroll' | 'room') => void;
 }
 
 export default function LandingChoice({ onChoose }: LandingChoiceProps) {
-  // 3. Add 'scroll' to the hover type
-  const [hoveredCard, setHoveredCard] = useState<'standard' | '3d' | 'scroll' | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<'standard' | '3d' | 'scroll' | 'room' | null>(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
@@ -48,8 +46,7 @@ export default function LandingChoice({ onChoose }: LandingChoiceProps) {
           </p>
         </div>
 
-        {/* 4. Change grid-cols-2 to grid-cols-3 */}
-        <div className="grid md:grid-cols-3 gap-8 mt-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
           
           {/* Button 1: Standard (No change) */}
           <button
@@ -133,8 +130,36 @@ export default function LandingChoice({ onChoose }: LandingChoiceProps) {
             </div>
           </button>
 
+          <button
+            onClick={() => onChoose('room')}
+            onMouseEnter={() => setHoveredCard('room')}
+            onMouseLeave={() => setHoveredCard(null)}
+            className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 border border-slate-700 hover:border-purple-500"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div className="relative z-10">
+              <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors duration-300">
+                <Home className={`w-10 h-10 text-purple-400 transition-transform duration-500 ${hoveredCard === 'room' ? 'rotate-12 scale-110' : ''}`} />
+              </div>
+
+              <h2 className="text-3xl font-bold text-white mb-4 group-hover:text-purple-300 transition-colors">
+                My Room
+              </h2>
+
+              <p className="text-slate-300 text-lg mb-6 leading-relaxed">
+                Step into my personal 3D room with interactive objects, detailed models, and smooth camera controls.
+              </p>
+
+              <div className="flex items-center text-purple-400 font-semibold">
+                <span className="mr-2">Enter the room</span>
+                <span className="transform transition-transform duration-300 group-hover:translate-x-2">→</span>
+              </div>
+            </div>
+          </button>
+
         </div>
-        
+
         <div className="text-center mt-12 text-slate-400 text-sm">
           <p>All experiences showcase the same core content, just in different ways</p>
         </div>

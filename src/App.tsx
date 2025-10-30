@@ -4,10 +4,10 @@ import { useState } from 'react';
 import LandingChoice from './components/LandingChoice';
 import StandardPortfolio from './components/StandardPortfolio';
 import Playground3D from './components/Playground3D';
-import ScrollPortfolio from './components/ScrollPortfolio'; // <-- 1. Import the new component
+import ScrollPortfolio from './components/ScrollPortfolio';
+import EnhancedRoom3D from './components/EnhancedRoom3D';
 
-// 2. Add 'scroll' to the list of possible modes
-type Mode = 'choice' | 'standard' | '3d' | 'scroll';
+type Mode = 'choice' | 'standard' | '3d' | 'scroll' | 'room';
 
 function App() {
   const [mode, setMode] = useState<Mode>('choice');
@@ -17,9 +17,8 @@ function App() {
       {mode === 'choice' && <LandingChoice onChoose={(selectedMode) => setMode(selectedMode)} />}
       {mode === 'standard' && <StandardPortfolio onBack={() => setMode('choice')} />}
       {mode === '3d' && <Playground3D onBack={() => setMode('choice')} />}
-      
-      {/* 3. Add the logic to render the new component */}
       {mode === 'scroll' && <ScrollPortfolio onBack={() => setMode('choice')} />}
+      {mode === 'room' && <EnhancedRoom3D onBack={() => setMode('choice')} />}
     </>
   );
 }
