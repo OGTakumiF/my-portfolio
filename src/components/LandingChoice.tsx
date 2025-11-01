@@ -1,6 +1,6 @@
 // src/components/LandingChoice.tsx
 
-import { Car, BookOpen, Sparkles, Layers, Home } from 'lucide-react';
+import { Car, BookOpen, Sparkles, Home } from 'lucide-react';
 import { useState } from 'react';
 
 interface LandingChoiceProps {

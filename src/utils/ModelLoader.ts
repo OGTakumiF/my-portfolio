@@ -12,7 +12,7 @@ export class ModelLoader {
       () => {
         if (onProgress) onProgress(100);
       },
-      (url, loaded, total) => {
+      (_url, loaded, total) => {
         if (onProgress && total > 0) {
           onProgress((loaded / total) * 100);
         }

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { Text, Environment, Sky, ContactShadows, Sphere, Box, Torus } from '@react-three/drei';
+import { Text, Environment, ContactShadows, Box } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { CameraController } from '../utils/CameraController';

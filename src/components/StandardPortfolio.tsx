@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Menu, X, Home, Briefcase, GraduationCap, Music, Target,
+  Menu, X, Briefcase, GraduationCap, Music, Target,
   Heart, Mail, Github, Linkedin, ChevronDown, Award, Zap
 } from 'lucide-react';
 

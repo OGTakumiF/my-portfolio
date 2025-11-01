@@ -6,7 +6,7 @@ CameraControls.install({ THREE });
 export class CameraController {
   public controls: CameraControls;
 
-  constructor(camera: THREE.Camera, domElement: HTMLElement) {
+  constructor(camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: HTMLElement) {
     this.controls = new CameraControls(camera, domElement);
 
     this.controls.minDistance = 5;

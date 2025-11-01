@@ -1,6 +1,6 @@
 import { Suspense, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Text } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import { X } from 'lucide-react';
 import * as THREE from 'three';
 

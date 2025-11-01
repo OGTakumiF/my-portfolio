@@ -35,7 +35,7 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
       };
     }, []);
 
-    useFrame((state, delta) => {
+    useFrame((_state, delta) => {
       if (!carRef.current) return;
 
       const speed = 0.15;
@@ -76,7 +76,7 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
       moveDirection.applyEuler(carRef.current.rotation);
       carRef.current.position.add(moveDirection.multiplyScalar(delta * 60));
 
-      const bounds = 23;
+      const bounds = 70;
       carRef.current.position.x = Math.max(-bounds, Math.min(bounds, carRef.current.position.x));
       carRef.current.position.z = Math.max(-bounds, Math.min(bounds, carRef.current.position.z));
 
@@ -156,7 +156,7 @@ export const AE86Car = forwardRef<THREE.Group, AE86CarProps>(
 function Wheel({ position }: { position: [number, number, number] }) {
   const wheelRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
+  useFrame(() => {
     if (wheelRef.current) {
       wheelRef.current.rotation.x += 0.1;
     }
