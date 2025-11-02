@@ -1,9 +1,9 @@
 import { Suspense, useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Text, Float, Stars, MeshDistortMaterial, OrbitControls, Environment } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Text, Float, Stars, MeshDistortMaterial, OrbitControls, Environment, Plane, RoundedBox } from '@react-three/drei';
 import {
-  Menu, X, Github, Linkedin, Mail, ChevronDown,
-  Zap, Music, Heart, Target, Trophy, Briefcase
+  Menu, X, Github, Linkedin, Mail, ChevronDown, ExternalLink,
+  Zap, Music, Heart, Target, Trophy, Briefcase, ArrowRight, Sparkles
 } from 'lucide-react';
 import * as THREE from 'three';
 import gsap from 'gsap';
@@ -13,11 +13,13 @@ interface Section {
   title: string;
   position: [number, number, number];
   color: string;
+  darkColor: string;
   icon: any;
   content: {
     heading: string;
     description: string;
     details: string[];
+    highlights?: string[];
   };
 }
 
@@ -25,8 +27,9 @@ const sections: Section[] = [
   {
     id: 'engineering',
     title: 'Engineering',
-    position: [0, 0, 0],
+    position: [0, 2, 0],
     color: '#06b6d4',
+    darkColor: '#164e63',
     icon: Zap,
     content: {
       heading: 'Sustainable Infrastructure Engineer',
@@ -36,179 +39,271 @@ const sections: Section[] = [
         'Diploma in Electrical Engineering (Power)',
         'Railway systems, track design, and signaling expertise',
         'Power distribution and control systems',
-        'Sustainable transport solutions'
-      ]
+        'Sustainable transport solutions',
+        'Expert in infrastructure project management'
+      ],
+      highlights: ['Railway Systems', 'Power Distribution', 'Infrastructure Design']
     }
   },
   {
     id: 'music',
     title: 'Music',
-    position: [8, 0, -8],
-    color: '#a855f7',
+    position: [10, 2, -8],
+    color: '#ec4899',
+    darkColor: '#831843',
     icon: Music,
     content: {
       heading: 'Musician & Performer',
       description: 'Trained violinist with vocal capabilities',
       details: [
-        'Classical violin performance',
-        'Vocal training and performance',
+        'Classical violin performance and training',
+        'Vocal training and professional performance',
         'Voice-over work for media projects',
-        'Music provides creative balance',
-        'Interdisciplinary perspective'
-      ]
+        'Studio recording experience',
+        'Music production and arrangement',
+        'Performance in orchestral and chamber settings'
+      ],
+      highlights: ['Violin', 'Vocals', 'Performance']
     }
   },
   {
     id: 'psychology',
     title: 'Psychology',
-    position: [-8, 0, -8],
-    color: '#ef4444',
+    position: [-10, 2, -8],
+    color: '#f87171',
+    darkColor: '#7f1d1d',
     icon: Heart,
     content: {
       heading: 'Psychology & Advisory',
-      description: 'Passionate about helping others',
+      description: 'Passionate about understanding and helping others',
       details: [
         'Regular advisor for friends and family',
-        'Community support and guidance',
-        'Understanding human behavior',
-        'Empathetic problem-solving',
-        'Personal development focus'
-      ]
+        'Community support and mentorship',
+        'Deep understanding of human behavior',
+        'Empathetic problem-solving approach',
+        'Personal and professional development focus',
+        'Conflict resolution and mediation'
+      ],
+      highlights: ['Mentorship', 'Counseling', 'Development']
     }
   },
   {
     id: 'motorsports',
     title: 'Motorsports',
-    position: [8, 0, 8],
-    color: '#f59e0b',
+    position: [10, 2, 8],
+    color: '#fbbf24',
+    darkColor: '#78350f',
     icon: Briefcase,
     content: {
       heading: 'Motorsports Enthusiast',
       description: 'Speed, precision, and engineering excellence',
       details: [
-        'Deep interest in vehicle dynamics',
-        'Racing strategy and analytics',
-        'High-performance engineering',
-        'Motorsports technology',
-        'Competitive spirit'
-      ]
+        'Deep interest in vehicle dynamics and performance',
+        'Racing strategy and competitive analytics',
+        'High-performance engineering principles',
+        'Motorsports technology and innovations',
+        'Track day experience and driver training',
+        'Passion for precision and speed'
+      ],
+      highlights: ['Performance', 'Dynamics', 'Racing']
     }
   },
   {
     id: 'archery',
     title: 'Archery',
-    position: [-8, 0, 8],
-    color: '#10b981',
+    position: [-10, 2, 8],
+    color: '#34d399',
+    darkColor: '#064e3b',
     icon: Target,
     content: {
       heading: 'Archery Practice',
-      description: 'Focus, discipline, and precision',
+      description: 'Focus, discipline, and precision mastery',
       details: [
-        'Regular archery practice',
-        'Mental discipline training',
-        'Precision and accuracy',
-        'Focus development',
-        'Translates to engineering mindset'
-      ]
+        'Regular competitive archery practice',
+        'Mental discipline and focus training',
+        'Precision accuracy development',
+        'Tournament participation and ranking',
+        'Translates engineering mindset to athletics',
+        'Continuous improvement philosophy'
+      ],
+      highlights: ['Precision', 'Focus', 'Discipline']
     }
   },
   {
     id: 'achievements',
     title: 'Achievements',
-    position: [0, 0, -12],
-    color: '#eab308',
+    position: [0, 2, -14],
+    color: '#fcd34d',
+    darkColor: '#713f12',
     icon: Trophy,
     content: {
       heading: 'Multi-Disciplinary Excellence',
       description: 'Combining technical expertise with creative passion',
       details: [
-        'Dual engineering qualifications',
-        'Active community involvement',
-        'Award-winning musician',
-        'Technical leadership',
-        'Continuous learner'
-      ]
+        'Dual engineering qualifications recognized internationally',
+        'Active community involvement and leadership',
+        'Award-winning musician with regional recognition',
+        'Technical leadership in multiple fields',
+        'Continuous learner and innovator',
+        'Bridging engineering, arts, and personal development'
+      ],
+      highlights: ['Excellence', 'Leadership', 'Innovation']
     }
   }
 ];
 
-function FloatingOrb({ section, onClick, isActive }: {
+function ParticleField() {
+  const particles = useRef<THREE.Points>(null);
+  const particleCount = 2000;
+
+  useFrame((state) => {
+    if (particles.current) {
+      particles.current.rotation.x = state.clock.elapsedTime * 0.00005;
+      particles.current.rotation.y = state.clock.elapsedTime * 0.0001;
+    }
+  });
+
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+
+  for (let i = 0; i < particleCount * 3; i += 3) {
+    positions[i] = (Math.random() - 0.5) * 200;
+    positions[i + 1] = (Math.random() - 0.5) * 200;
+    positions[i + 2] = (Math.random() - 0.5) * 200;
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  return (
+    <points ref={particles} geometry={geometry}>
+      <pointsMaterial size={0.15} color="#60a5fa" sizeAttenuation transparent opacity={0.4} />
+    </points>
+  );
+}
+
+function AnimatedOrbital({ section, onClick, isActive }: {
   section: Section;
   onClick: () => void;
   isActive: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
+  const pointLightRef = useRef<THREE.PointLight>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.3;
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.4;
+      meshRef.current.rotation.x += 0.008;
+      meshRef.current.rotation.y += 0.012;
+      meshRef.current.rotation.z += 0.005;
 
-      const scale = hovered || isActive ? 1.2 : 1;
-      meshRef.current.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.1);
+      const scale = hovered || isActive ? 1.3 : 1;
+      const targetScale = new THREE.Vector3(scale, scale, scale);
+      meshRef.current.scale.lerp(targetScale, 0.15);
+
+      meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 2) * 0.002;
     }
+
     if (glowRef.current) {
-      glowRef.current.rotation.y = -state.clock.elapsedTime * 0.5;
-      const glowScale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      glowRef.current.scale.set(glowScale, glowScale, glowScale);
+      glowRef.current.rotation.y = state.clock.elapsedTime * 0.3;
+      glowRef.current.rotation.z = state.clock.elapsedTime * 0.2;
+      glowRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 3) * 0.15;
+      glowRef.current.scale.y = 1 + Math.cos(state.clock.elapsedTime * 2.5) * 0.15;
+    }
+
+    if (ringRef.current) {
+      ringRef.current.rotation.y += 0.015;
+      ringRef.current.scale.set(
+        1 + Math.sin(state.clock.elapsedTime * 2) * 0.2,
+        1 + Math.sin(state.clock.elapsedTime * 2) * 0.2,
+        1
+      );
+    }
+
+    if (pointLightRef.current) {
+      pointLightRef.current.intensity = isActive ? 4 : (hovered ? 2.5 : 1.5);
     }
   });
 
-  useEffect(() => {
-    document.body.style.cursor = hovered ? 'pointer' : 'auto';
-  }, [hovered]);
-
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
+    <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8}>
       <group position={section.position}>
+        <mesh ref={ringRef}>
+          <torusGeometry args={[3, 0.1, 16, 100]} />
+          <meshBasicMaterial
+            color={section.color}
+            transparent
+            opacity={isActive ? 0.6 : 0.2}
+            wireframe={false}
+          />
+        </mesh>
+
         <mesh
           ref={meshRef}
           onClick={onClick}
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
         >
-          <icosahedronGeometry args={[1.5, 1]} />
+          <icosahedronGeometry args={[1.8, 4]} />
           <MeshDistortMaterial
             color={section.color}
             emissive={section.color}
-            emissiveIntensity={isActive ? 0.8 : 0.4}
-            roughness={0.2}
-            metalness={0.8}
-            distort={0.4}
-            speed={2}
+            emissiveIntensity={isActive ? 1 : 0.5}
+            roughness={0.1}
+            metalness={0.9}
+            distort={hovered || isActive ? 0.5 : 0.3}
+            speed={2.5}
           />
         </mesh>
 
         <mesh ref={glowRef}>
-          <icosahedronGeometry args={[2, 1]} />
+          <icosahedronGeometry args={[2.3, 2]} />
           <meshBasicMaterial
             color={section.color}
             transparent
-            opacity={isActive ? 0.3 : 0.15}
+            opacity={isActive ? 0.4 : 0.15}
             wireframe
           />
         </mesh>
 
+        <mesh position={[0, 0, 2.2]}>
+          <boxGeometry args={[0.8, 0.8, 0.1]} />
+          <meshBasicMaterial color={section.color} transparent opacity={0.3} />
+        </mesh>
+
         <Text
-          position={[0, 2.5, 0]}
-          fontSize={0.5}
+          position={[0, 3.2, 0]}
+          fontSize={0.6}
+          fontWeight="bold"
           color="white"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.05}
+          outlineWidth={0.08}
           outlineColor="#000000"
+          maxWidth={4}
         >
           {section.title}
         </Text>
 
         <pointLight
+          ref={pointLightRef}
           position={[0, 0, 0]}
           color={section.color}
-          intensity={isActive ? 3 : 1.5}
-          distance={10}
+          distance={15}
+          castShadow
         />
+
+        <mesh castShadow>
+          <sphereGeometry args={[1.8, 32, 32]} />
+          <meshStandardMaterial
+            color={section.color}
+            emissive={section.color}
+            emissiveIntensity={0.3}
+            metalness={0.7}
+            roughness={0.3}
+          />
+        </mesh>
       </group>
     </Float>
   );
@@ -223,12 +318,15 @@ function Scene3D({
 }) {
   return (
     <>
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <pointLight position={[0, 10, 0]} intensity={0.5} color="#60a5fa" />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[15, 15, 5]} intensity={1.2} castShadow />
+      <directionalLight position={[-15, 10, -5]} intensity={0.6} color="#60a5fa" />
+      <pointLight position={[0, 20, 0]} intensity={0.8} color="#a78bfa" distance={100} />
+
+      <ParticleField />
 
       {sections.map((section) => (
-        <FloatingOrb
+        <AnimatedOrbital
           key={section.id}
           section={section}
           onClick={() => onSectionClick(section)}
@@ -236,20 +334,9 @@ function Scene3D({
         />
       ))}
 
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      <Stars radius={200} depth={100} count={8000} factor={5} saturation={0.5} fade speed={0.5} />
       <Environment preset="night" />
     </>
-  );
-}
-
-function LoadingScreen() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white text-xl">Loading Experience...</p>
-      </div>
-    </div>
   );
 }
 
@@ -257,16 +344,18 @@ export default function AnimatedPortfolio() {
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const controlsRef = useRef<any>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       gsap.to('.welcome-screen', {
         opacity: 0,
-        duration: 1,
+        duration: 1.2,
+        ease: 'power2.inOut',
         onComplete: () => setShowWelcome(false)
       });
-    }, 2500);
+    }, 2200);
 
     return () => clearTimeout(timer);
   }, []);
@@ -277,10 +366,10 @@ export default function AnimatedPortfolio() {
 
     if (controlsRef.current) {
       gsap.to(controlsRef.current.object.position, {
-        x: section.position[0],
-        y: section.position[1] + 5,
-        z: section.position[2] + 10,
-        duration: 1.5,
+        x: section.position[0] * 0.7,
+        y: section.position[1] + 6,
+        z: section.position[2] + 12,
+        duration: 1.8,
         ease: 'power2.inOut'
       });
     }
@@ -291,8 +380,8 @@ export default function AnimatedPortfolio() {
     if (controlsRef.current) {
       gsap.to(controlsRef.current.object.position, {
         x: 0,
-        y: 8,
-        z: 20,
+        y: 10,
+        z: 25,
         duration: 1.5,
         ease: 'power2.inOut'
       });
@@ -302,33 +391,38 @@ export default function AnimatedPortfolio() {
   return (
     <div className="relative w-full h-screen bg-slate-950 overflow-hidden">
       {showWelcome && (
-        <div className="welcome-screen absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-          <div className="text-center animate-fade-in">
-            <h1 className="text-6xl md:text-8xl font-bold text-white mb-4">
-              Sean Ogta Goh
-            </h1>
-            <p className="text-2xl md:text-3xl text-cyan-400 mb-6">
+        <div className="welcome-screen absolute inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-blue-900/20 to-slate-950">
+          <div className="text-center animate-fade-in space-y-6">
+            <div className="flex items-center justify-center space-x-3">
+              <Sparkles className="w-10 h-10 text-cyan-400 animate-pulse" />
+              <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                Sean Ogta Goh
+              </h1>
+              <Sparkles className="w-10 h-10 text-cyan-400 animate-pulse" />
+            </div>
+            <p className="text-2xl md:text-3xl bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent font-bold">
               Engineer • Musician • Advisor
             </p>
-            <div className="flex items-center justify-center text-slate-400 animate-pulse">
+            <div className="flex items-center justify-center text-cyan-400/70 animate-bounce pt-4">
               <ChevronDown className="w-8 h-8" />
             </div>
           </div>
         </div>
       )}
 
-      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-slate-950/90 to-transparent backdrop-blur-sm">
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-slate-950/95 via-slate-950/80 to-transparent backdrop-blur-sm border-b border-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
           <button
             onClick={resetView}
-            className="text-white hover:text-cyan-400 transition-all duration-300 font-bold text-xl"
+            className="text-white hover:text-cyan-400 transition-all duration-300 font-black text-xl tracking-tight flex items-center space-x-2 group"
           >
-            Sean Ogta Goh
+            <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            <span>Sean Ogta Goh</span>
           </button>
 
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="text-white hover:text-cyan-400 transition-colors p-2"
+            className="text-white hover:text-cyan-400 transition-all p-2 hover:bg-slate-800/50 rounded-lg"
           >
             {showMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -336,43 +430,54 @@ export default function AnimatedPortfolio() {
       </div>
 
       {showMenu && (
-        <div className="absolute top-20 right-4 z-40 bg-slate-900/95 backdrop-blur-md rounded-2xl p-6 border border-slate-700 shadow-2xl">
-          <h3 className="text-white font-bold text-lg mb-4">Explore</h3>
-          <div className="space-y-3">
+        <div className="absolute top-20 right-4 z-40 bg-slate-900/98 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50 shadow-2xl max-w-sm w-full">
+          <h3 className="text-white font-black text-lg mb-6 flex items-center space-x-2">
+            <Zap className="w-5 h-5 text-cyan-400" />
+            <span>Explore My Journey</span>
+          </h3>
+          <div className="space-y-2">
             {sections.map((section) => (
               <button
                 key={section.id}
                 onClick={() => handleSectionClick(section)}
-                className="flex items-center space-x-3 w-full text-left px-4 py-3 rounded-lg transition-all hover:bg-slate-800 group"
+                className="flex items-center space-x-3 w-full text-left px-4 py-3 rounded-xl transition-all hover:bg-slate-800/80 group relative overflow-hidden"
               >
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: section.color + '20' }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 relative z-10"
+                  style={{ backgroundColor: section.color }}
                 >
-                  <section.icon className="w-5 h-5" style={{ color: section.color }} />
+                  <section.icon className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-white group-hover:text-cyan-400 transition-colors">
-                  {section.title}
-                </span>
+                <div className="flex-1">
+                  <p className="text-white group-hover:text-cyan-300 transition-colors font-semibold">
+                    {section.title}
+                  </p>
+                  <p className="text-xs text-slate-400 group-hover:text-slate-300">
+                    {section.content.description.substring(0, 40)}...
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-all group-hover:translate-x-1" />
               </button>
             ))}
           </div>
         </div>
       )}
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40 text-center">
-        <p className="text-white/80 text-sm bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-full border border-slate-700">
-          Click on orbs to explore • Drag to rotate • Scroll to zoom
-        </p>
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-40">
+        <div className="text-center space-y-3">
+          <p className="text-white/70 text-sm bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-full border border-slate-700/50 font-medium">
+            ✨ Click orbs to explore • Drag to rotate • Scroll to zoom
+          </p>
+        </div>
       </div>
 
       <Canvas
-        camera={{ position: [0, 8, 20], fov: 60 }}
-        gl={{ antialias: true }}
+        camera={{ position: [0, 10, 25], fov: 60 }}
+        gl={{ antialias: true, alpha: true }}
       >
         <Suspense fallback={null}>
           <color attach="background" args={['#0a0a15']} />
-          <fog attach="fog" args={['#0a0a15', 15, 50]} />
+          <fog attach="fog" args={['#0a0a15', 20, 80]} />
 
           <Scene3D activeSection={activeSection} onSectionClick={handleSectionClick} />
 
@@ -381,87 +486,135 @@ export default function AnimatedPortfolio() {
             enablePan={false}
             enableZoom={true}
             enableRotate={true}
-            maxDistance={35}
-            minDistance={8}
-            maxPolarAngle={Math.PI / 2}
+            maxDistance={50}
+            minDistance={10}
+            maxPolarAngle={Math.PI / 1.8}
+            minPolarAngle={Math.PI / 3}
+            autoRotate={!activeSection}
+            autoRotateSpeed={0.5}
           />
         </Suspense>
       </Canvas>
 
       {activeSection && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md transition-opacity"
           onClick={() => setActiveSection(null)}
         >
           <div
-            className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 md:p-12 max-w-3xl w-full border-2 shadow-2xl transform transition-all animate-fade-in"
-            style={{ borderColor: activeSection.color }}
+            className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 rounded-3xl p-8 md:p-12 max-w-4xl w-full border shadow-2xl transform transition-all animate-fade-in relative overflow-hidden"
+            style={{
+              borderColor: activeSection.color,
+              borderWidth: '2px',
+              boxShadow: `0 0 60px ${activeSection.color}40`
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-4">
+            <div
+              className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 blur-3xl"
+              style={{ backgroundColor: activeSection.color }}
+            ></div>
+
+            <button
+              onClick={() => setActiveSection(null)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors bg-slate-700/50 p-3 rounded-xl hover:bg-slate-700 z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="relative z-10">
+              <div className="flex items-start space-x-6 mb-8">
                 <div
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl"
+                  className="w-24 h-24 rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0 relative"
                   style={{ backgroundColor: activeSection.color }}
                 >
-                  <activeSection.icon className="w-10 h-10 text-white" />
+                  <activeSection.icon className="w-12 h-12 text-white" />
+                  <div
+                    className="absolute inset-0 rounded-2xl opacity-30"
+                    style={{
+                      boxShadow: `inset 0 0 20px ${activeSection.color}`
+                    }}
+                  ></div>
                 </div>
-                <div>
-                  <h2 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                <div className="flex-1">
+                  <h2 className="text-4xl md:text-5xl font-black text-white mb-3">
                     {activeSection.content.heading}
                   </h2>
-                  <p className="text-xl text-slate-300">{activeSection.content.description}</p>
+                  <p className="text-xl text-slate-300 font-semibold">
+                    {activeSection.content.description}
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => setActiveSection(null)}
-                className="text-slate-400 hover:text-white transition-colors bg-slate-700/50 p-3 rounded-xl hover:bg-slate-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
 
-            <div className="space-y-3 mb-8">
-              {activeSection.content.details.map((detail, index) => (
-                <div
-                  key={index}
-                  className="flex items-start space-x-3 text-slate-200 text-lg"
-                >
-                  <div
-                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                    style={{ backgroundColor: activeSection.color }}
-                  ></div>
-                  <p>{detail}</p>
+              {activeSection.content.highlights && (
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {activeSection.content.highlights.map((highlight, index) => (
+                    <span
+                      key={index}
+                      className="px-4 py-2 rounded-full text-sm font-bold text-white"
+                      style={{
+                        backgroundColor: activeSection.color + '25',
+                        color: activeSection.color,
+                        border: `1px solid ${activeSection.color}60`
+                      }}
+                    >
+                      {highlight}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
 
-            <div className="flex items-center justify-center space-x-4 pt-6 border-t border-slate-700">
-              <a
-                href="https://www.linkedin.com/in/sean-ogta-goh"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg transition-all hover:scale-105"
-              >
-                <Linkedin className="w-5 h-5" />
-                <span>LinkedIn</span>
-              </a>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition-all hover:scale-105"
-              >
-                <Github className="w-5 h-5" />
-                <span>GitHub</span>
-              </a>
-              <a
-                href="mailto:your.email@example.com"
-                className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg transition-all hover:scale-105"
-              >
-                <Mail className="w-5 h-5" />
-                <span>Email</span>
-              </a>
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
+                {activeSection.content.details.map((detail, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-3 bg-slate-800/50 p-4 rounded-xl border border-slate-700/30 hover:border-slate-600/50 transition-colors"
+                  >
+                    <div
+                      className="w-2 h-2 rounded-full mt-2.5 flex-shrink-0"
+                      style={{ backgroundColor: activeSection.color }}
+                    ></div>
+                    <p className="text-slate-200 text-base leading-relaxed">{detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-center space-x-4 pt-8 border-t border-slate-700/50">
+                <a
+                  href="https://www.linkedin.com/in/sean-ogta-goh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onMouseEnter={() => setHoveredLink('linkedin')}
+                  onMouseLeave={() => setHoveredLink(null)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white px-6 py-3 rounded-xl transition-all hover:scale-110 font-semibold shadow-lg"
+                >
+                  <Linkedin className="w-5 h-5" />
+                  <span>LinkedIn</span>
+                  {hoveredLink === 'linkedin' && <ExternalLink className="w-4 h-4" />}
+                </a>
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onMouseEnter={() => setHoveredLink('github')}
+                  onMouseLeave={() => setHoveredLink(null)}
+                  className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl transition-all hover:scale-110 font-semibold shadow-lg"
+                >
+                  <Github className="w-5 h-5" />
+                  <span>GitHub</span>
+                  {hoveredLink === 'github' && <ExternalLink className="w-4 h-4" />}
+                </a>
+                <a
+                  href="mailto:sean.goh@example.com"
+                  onMouseEnter={() => setHoveredLink('email')}
+                  onMouseLeave={() => setHoveredLink(null)}
+                  className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white px-6 py-3 rounded-xl transition-all hover:scale-110 font-semibold shadow-lg"
+                >
+                  <Mail className="w-5 h-5" />
+                  <span>Email</span>
+                  {hoveredLink === 'email' && <ExternalLink className="w-4 h-4" />}
+                </a>
+              </div>
             </div>
           </div>
         </div>
